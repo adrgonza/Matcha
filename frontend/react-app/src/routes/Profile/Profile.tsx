@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NavbarLogged from '../../components/NavbarLogged/NavbarLogged'
-import './profile.css'
+import './Profile.css'
 
 export interface UserProfile {
   first_name: string
@@ -39,7 +39,7 @@ function Profile() {
         const params = new URLSearchParams();
         params.append("gps_longitude", longitude.toString());
         params.append("gps_latitude", latitude.toString());
-        fetch("http://localhost:3000/api/profiles/me", {
+        fetch(`${window.location.origin}/api/profiles/me`, {
           method: "PATCH",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: params,
@@ -58,7 +58,7 @@ function Profile() {
         const params = new URLSearchParams();
         params.append("gps_longitude", data.longitude.toString());
         params.append("gps_latitude", data.latitude.toString());
-        await fetch("http://localhost:3000/api/profiles/me", {
+        await fetch(`${window.location.origin}/api/profiles/me`, {
           method: "PATCH",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: params,

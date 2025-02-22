@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import ReactSlider from 'react-slider';
 import NavbarLogged from '../../components/NavbarLogged/NavbarLogged';
-import './settings.css';
+import './Settings.css';
 
 function Settings() {
   const [distance, setDistance] = useState(50);
@@ -17,7 +17,7 @@ function Settings() {
   const [availableInterests, setAvailableInterests] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/users/me")
+    fetch(`${window.location.origin}/api/users/me`)
       .then((res) => res.json())
       .then((response) => {
         if (response?.data?.user?.email) {
@@ -26,7 +26,7 @@ function Settings() {
       })
       .catch(() => {});
 
-    fetch("http://localhost:3000/api/profiles/me", { credentials: "include" })
+    fetch(`${window.location.origin}/api/profiles/me`, { credentials: "include" })
       .then((res) => res.json())
       .then((result) => {
         if (result?.status === "success") {
@@ -73,7 +73,7 @@ function Settings() {
   const handleSaveChanges = async () => {
     const emailParams = new URLSearchParams();
     emailParams.append("email", email);
-    await fetch("http://localhost:3000/api/users/me", {
+    await fetch(`${window.location.origin}/api/users/me`, {
       method: "PATCH",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: emailParams,
@@ -89,11 +89,11 @@ function Settings() {
     profileParams.append("fame_rating_max", maxFameRating.toString());
     profileParams.append(
       "interests_filter",
-      commonTags.map(t => t.startsWith('#') ? t : '#' + t).join(', ')
+      commonTags.map(t => t.replace(/^#/, '')).join(', ')
     );
     profileParams.append("common_interests", minCommonInterests.toString());
 
-    await fetch("http://localhost:3000/api/profiles/me", {
+    await fetch(`${window.location.origin}/api/profiles/me`, {
       method: "PATCH",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: profileParams,
@@ -108,7 +108,7 @@ function Settings() {
         const params = new URLSearchParams();
         params.append("gps_longitude", longitude.toString());
         params.append("gps_latitude", latitude.toString());
-        fetch("http://localhost:3000/api/profiles/me", {
+        fetch(`${window.location.origin}/api/profiles/me`, {
           method: "PATCH",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: params,
@@ -127,7 +127,7 @@ function Settings() {
         const params = new URLSearchParams();
         params.append("gps_longitude", data.longitude.toString());
         params.append("gps_latitude", data.latitude.toString());
-        await fetch("http://localhost:3000/api/profiles/me", {
+        await fetch(`${window.location.origin}/api/profiles/me`, {
           method: "PATCH",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: params,
@@ -141,7 +141,7 @@ function Settings() {
       return;
     }
     try {
-      const res = await fetch("http://localhost:3000/api/users/me", {
+      const res = await fetch(`${window.location.origin}/api/users/me`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -155,11 +155,12 @@ function Settings() {
   };
 
   const toggleCommonTag = (tag: string) => {
-    if (commonTags.includes(tag)) {
-      setCommonTags(commonTags.filter(t => t !== tag));
+    const normalizedTag = tag.replace(/^#/, '');
+    if (commonTags.includes(normalizedTag)) {
+      setCommonTags(commonTags.filter(t => t !== normalizedTag));
     } else {
       if (commonTags.length < 5) {
-        setCommonTags([...commonTags, tag]);
+        setCommonTags([...commonTags, normalizedTag]);
       } else {
         alert("Maximum 5 tags allowed");
       }
@@ -234,7 +235,7 @@ function Settings() {
                     className="form-check-input"
                     id={`tag-${idx}`}
                     value={tag}
-                    checked={commonTags.includes(tag)}
+                    checked={commonTags.includes(tag.replace(/^#/, ''))}
                     onChange={() => toggleCommonTag(tag)}
                   />
                   <label className="form-check-label" htmlFor={`tag-${idx}`}>

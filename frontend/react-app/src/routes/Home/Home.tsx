@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavbarLogged from '../../components/NavbarLogged/NavbarLogged';
-import './home.css';
+import './Home.css';
 
 type User = {
   profile_id: number;
@@ -24,12 +24,7 @@ function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [preferences, setPreferences] = useState<any>(null);
-  const [sortCriteria, setSortCriteria] = useState<Record<string, { $order: "asc" | "desc" }>>({
-    distance: { $order: "desc" },
-    age: { $order: "asc" },
-    fame_rating: { $order: "desc" },
-    common_interests: { $order: "desc" },
-  });
+  const [sortCriteria, setSortCriteria] = useState<Record<string, { $order: "asc" | "desc" }>>({});
   const [actedUserIds, setActedUserIds] = useState<Set<number>>(new Set());
   const [showMatchAnimation, setShowMatchAnimation] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -43,7 +38,7 @@ function Home() {
         const params = new URLSearchParams();
         params.append("gps_longitude", longitude.toString());
         params.append("gps_latitude", latitude.toString());
-        fetch("http://localhost:3000/api/profiles/me", {
+        fetch(`${window.location.origin}/api/profiles/me`, {
           method: "PATCH",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: params,
@@ -62,7 +57,7 @@ function Home() {
         const params = new URLSearchParams();
         params.append("gps_longitude", data.longitude.toString());
         params.append("gps_latitude", data.latitude.toString());
-        await fetch("http://localhost:3000/api/profiles/me", {
+        await fetch(`${window.location.origin}/api/profiles/me`, {
           method: "PATCH",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: params,
@@ -117,7 +112,7 @@ function Home() {
       }
     }
     if (search_preferences.interests_filter) {
-      filterObject.interests = { $in: search_preferences.interests_filter.split(',').map((t: string) => t.trim()) };
+      filterObject.interests = { $overlap: search_preferences.interests_filter.split(',').map((t: string) => t.trim()) };
     }
     if (search_preferences.common_interests !== undefined) {
       filterObject.common_interests = { $gte: String(search_preferences.common_interests) };
@@ -143,7 +138,7 @@ function Home() {
       }
       params.append("limit", "100");
       try {
-        const res = await fetch(`http://localhost:3000/api/profiles?${params.toString()}`, {
+        const res = await fetch(`${window.location.origin}/api/profiles?${params.toString()}`, {
           credentials: 'include'
         });
         const data = await res.json();
@@ -185,7 +180,7 @@ function Home() {
   useEffect(() => {
     const currentUser = users[currentIndex];
     if (!currentUser) return;
-    fetch(`http://localhost:3000/api/profiles/${currentUser.profile_id}/visits`, {
+    fetch(`${window.location.origin}/api/profiles/${currentUser.profile_id}/visits`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include'
@@ -193,7 +188,15 @@ function Home() {
   }, [currentIndex, users]);
 
   const updateSort = (field: string, order: "asc" | "desc") => {
-    setSortCriteria(prev => ({ ...prev, [field]: { $order: order } }));
+    setSortCriteria(prev => {
+      const newCriteria = { ...prev };
+      if (prev[field] && prev[field].$order === order) {
+        delete newCriteria[field];
+      } else {
+        newCriteria[field] = { $order: order };
+      }
+      return newCriteria;
+    });
   };
 
   const handleLikeUser = async () => {
@@ -202,7 +205,7 @@ function Home() {
     if (actedUserIds.has(currentUser.profile_id)) return;
     setIsActionLoading(true);
     try {
-      await fetch(`http://localhost:3000/api/profiles/${currentUser.profile_id}/like`, {
+      await fetch(`${window.location.origin}/api/profiles/${currentUser.profile_id}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -224,7 +227,7 @@ function Home() {
     if (actedUserIds.has(currentUser.profile_id)) return;
     setIsActionLoading(true);
     try {
-      await fetch(`http://localhost:3000/api/profiles/${currentUser.profile_id}/dislike`, {
+      await fetch(`${window.location.origin}/api/profiles/${currentUser.profile_id}/dislike`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
